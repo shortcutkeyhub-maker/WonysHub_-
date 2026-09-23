@@ -83,30 +83,21 @@
             'B': 'https://docs.google.com/forms/d/e/1FAIpQLSeC3_M1BRjv4UUjlFcBjQ6N7sQCd7sF21Q8Z6_XWKjAO36KBw/viewform?usp=publish-editor'
         };
 
-        let currentUserIp = 'unknown';
-
         async function assignSurvey() {
             const appDiv = document.getElementById('app');
 
-            try {
-                // 1. IP 확인 로직 (재참여 의사 묻기)
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipResponse.json();
-                currentUserIp = ipData.ip;
-
-                const savedIp = localStorage.getItem('visitedSurveyIp');
-                if (savedIp === currentUserIp) {
-                    const wantToRetry = confirm("설문에 다시 참여하시겠습니까?");
-                    if (!wantToRetry) {
-                        appDiv.innerHTML = `
-                            <h2 style="margin-bottom: 8px;">참여가 취소되었습니다</h2>
-                            <p>이미 설문에 참여하신 기록이 있습니다.<br>관심 가져주셔서 감사합니다.</p>
-                        `;
-                        return; // 스크립트 실행 즉시 중단
-                    }
+            // 1. IP를 제외하고 오직 로컬 스토리지만을 활용한 재참여 확인
+            const hasParticipated = localStorage.getItem('hasParticipated');
+            if (hasParticipated === 'true') {
+                const wantToRetry = confirm("이미 설문에 참여하신 기록이 있습니다. 다시 참여하시겠습니까?");
+                if (!wantToRetry) {
+                    appDiv.innerHTML = `
+                        <h2 style="margin-bottom: 8px;">참여가 취소되었습니다</h2>
+                        <p>관심 가져주셔서 감사합니다.</p>
+                    `;
+                    return; // 스크립트 실행 중단
                 }
-            } catch (error) {
-                console.warn('IP 확인 중 오류 발생, 배정 프로세스는 계속 진행합니다.');
+                // 확인을 눌렀다면 그대로 아래의 배정 로직 진행
             }
 
             try {
@@ -117,14 +108,12 @@
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    // a 태그 대신 button 태그를 사용하여 confirmAndStart() 함수 호출
                     appDiv.innerHTML = `
                         <h2 style="margin-bottom: 8px;">배정 완료</h2>
                         <p style="color: #111; font-weight: 500;">귀하는 <strong>${data.assigned}형 설문지</strong>에 배정되었습니다.</p>
                         <button onclick="confirmAndStart('${data.assigned}')" class="btn" id="start-btn">설문 시작하기</button>
                     `;
                 } else {
-                    // 오류 발생 시 통합된 에러 핸들링 페이지로 이동
                     window.location.href = 'er.html?err=null';
                 }
             } catch (error) {
@@ -132,7 +121,7 @@
             }
         }
 
-        // 3. 설문 시작 클릭 시 DB 카운트 증가 반영 및 로컬 스토리지에 IP 기록
+        // 3. 설문 시작 클릭 시 DB 카운트 증가 반영 및 로컬 스토리지에 참여 기록
         async function confirmAndStart(assignedType) {
             const btn = document.getElementById('start-btn');
             btn.innerText = "이동 중...";
@@ -153,10 +142,8 @@
                     return;
                 }
 
-                // 이동이 확정되면 현재 IP를 로컬 스토리지에 저장
-                if (currentUserIp !== 'unknown') {
-                    localStorage.setItem('visitedSurveyIp', currentUserIp);
-                }
+                // 이동이 확정되면 로컬 스토리지에 참여 완료 마킹
+                localStorage.setItem('hasParticipated', 'true');
                 
                 window.location.href = SURVEY_URLS[assignedType];
             } catch (error) {
