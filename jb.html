@@ -45,10 +45,13 @@
             border-radius: 999px; /* 알약버튼이 최고임 ㅇㅇ */
             font-size: 1.125rem;
             font-weight: 600;
+            border: none;
+            cursor: pointer;
             transition: background-color 0.2s, transform 0.1s;
         }
         .btn:hover { background-color: #333333; }
         .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #cccccc; cursor: not-allowed; transform: none; }
         
         /* 로딩 스피너 */
         .spinner {
@@ -74,43 +77,90 @@
     </div>
 
     <script>
-   
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQmc7mVUGfVH4mBPDfI-36eGpPmxzW8s6D1F_JYbRnhUWLgs7m9ZERrOgmEt5_qbUD/exec';
         const SURVEY_URLS = {
             'A': 'https://docs.google.com/forms/d/e/1FAIpQLSdqmJtBaZt6Jo5Aql4d28qVs3W4gSDfaG4m6YyBEzzeGzObqA/viewform?usp=publish-editor',
             'B': 'https://docs.google.com/forms/d/e/1FAIpQLSeC3_M1BRjv4UUjlFcBjQ6N7sQCd7sF21Q8Z6_XWKjAO36KBw/viewform?usp=publish-editor'
         };
 
+        let currentUserIp = 'unknown';
+
         async function assignSurvey() {
             const appDiv = document.getElementById('app');
 
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                // 1. IP 확인 로직 (재참여 의사 묻기)
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                currentUserIp = ipData.ip;
 
-                const response = await fetch(GAS_WEB_APP_URL, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                const savedIp = localStorage.getItem('visitedSurveyIp');
+                if (savedIp === currentUserIp) {
+                    const wantToRetry = confirm("설문에 다시 참여하시겠습니까?");
+                    if (!wantToRetry) {
+                        appDiv.innerHTML = `
+                            <h2 style="margin-bottom: 8px;">참여가 취소되었습니다</h2>
+                            <p>이미 설문에 참여하신 기록이 있습니다.<br>관심 가져주셔서 감사합니다.</p>
+                        `;
+                        return; // 스크립트 실행 즉시 중단
+                    }
+                }
+            } catch (error) {
+                console.warn('IP 확인 중 오류 발생, 배정 프로세스는 계속 진행합니다.');
+            }
 
+            try {
+                // 2. action=check 파라미터로 DB 락(Lock) 없이 배정 결과만 호출
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=check`);
                 if (!response.ok) throw new Error('HTTP_ERROR');
 
                 const data = await response.json();
 
-                if (data.status === 'busy') {
-                    window.location.href = 'E403.html';
-                    return;
-                }
-
                 if (data.status === 'success') {
+                    // a 태그 대신 button 태그를 사용하여 confirmAndStart() 함수 호출
                     appDiv.innerHTML = `
                         <h2 style="margin-bottom: 8px;">배정 완료</h2>
                         <p style="color: #111; font-weight: 500;">귀하는 <strong>${data.assigned}형 설문지</strong>에 배정되었습니다.</p>
-                        <a href="${SURVEY_URLS[data.assigned]}" class="btn">설문 시작하기</a>
+                        <button onclick="confirmAndStart('${data.assigned}')" class="btn" id="start-btn">설문 시작하기</button>
                     `;
                 } else {
-                    appDiv.innerHTML = `<h2 style="color: #ff3333;">오류 발생</h2><p>${data.message}</p>`;
+                    // 오류 발생 시 통합된 에러 핸들링 페이지로 이동
+                    window.location.href = 'er.html?err=null';
                 }
             } catch (error) {
-                window.location.href = 'E403.html';
+                window.location.href = 'er.html?err=cors';
+            }
+        }
+
+        // 3. 설문 시작 클릭 시 DB 카운트 증가 반영 및 로컬 스토리지에 IP 기록
+        async function confirmAndStart(assignedType) {
+            const btn = document.getElementById('start-btn');
+            btn.innerText = "이동 중...";
+            btn.disabled = true; // 중복 클릭 방지
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=confirm&type=${assignedType}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error('HTTP_ERROR');
+                const data = await response.json();
+
+                if (data.status === 'busy') {
+                    window.location.href = 'er.html?err=403';
+                    return;
+                }
+
+                // 이동이 확정되면 현재 IP를 로컬 스토리지에 저장
+                if (currentUserIp !== 'unknown') {
+                    localStorage.setItem('visitedSurveyIp', currentUserIp);
+                }
+                
+                window.location.href = SURVEY_URLS[assignedType];
+            } catch (error) {
+                window.location.href = 'er.html?err=403';
             }
         }
 
