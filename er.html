@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안내</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            margin: 0; 
+            background-color: #ffffff; 
+            color: #111111;
+            /* 기기 화면 비율에 맞춘 유동형 폰트 사이즈 */
+            font-size: clamp(1rem, 1.5vw + 0.5rem, 1.125rem);
+            word-break: keep-all; 
+            overflow-wrap: break-word;
+        }
+
+        /* 첫 화면 영역 */
+        .hero {
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        h1 { 
+            font-size: clamp(2rem, 5vw + 1rem, 2.75rem); 
+            font-weight: 700; 
+            margin-bottom: 16px; 
+            letter-spacing: -0.02em; 
+        }
+
+        p.desc { 
+            color: #666666; 
+            margin-bottom: 32px; 
+            line-height: 1.5; 
+        }
+
+        .btn {
+            display: inline-block; 
+            padding: 16px 40px; 
+            background-color: #111111; 
+            color: #ffffff; 
+            text-decoration: none; 
+            border-radius: 999px; /* 알약 모양 둥근 버튼 */
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:hover { background-color: #333333; }
+        .btn:active { transform: scale(0.98); }
+
+        /* 스크롤 유도 애니메이션 */
+        .scroll-hint {
+            margin-top: auto; 
+            margin-bottom: 40px; 
+            font-weight: 500; 
+            color: #888888;
+            animation: bounce 2s infinite; 
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* 스크롤을 내리면 나타나는 해결법 영역 */
+        .detail-section {
+            min-height: 80vh; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            padding: 0 24px;
+            opacity: 0; 
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .detail-section.visible {
+            opacity: 1; 
+            transform: translateY(0);
+        }
+
+        h2 { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 24px; color: #111; }
+        
+        /* 박스 테두리 대신 배경색만 미세하게 다르게 처리하여 미니멀함 유지 */
+        .reason-box {
+            background: #f7f7f7; 
+            padding: 32px; 
+            border-radius: 24px;
+            max-width: 500px; 
+            width: 100%;
+        }
+        
+        .reason-box h3 { margin-top: 0; font-size: 1.125rem; color: #d9534f; margin-bottom: 8px; }
+        .reason-box p { color: #444; margin-bottom: 24px; }
+        .reason-box p:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1 id="error-title">오류가 발생했습니다</h1>
+        <p class="desc" id="error-desc">요청을 처리하는 중 문제가 발생했습니다.</p>
+        <div id="action-area"></div>
+        <div class="scroll-hint" id="scroll-hint" style="display: none;">해결법 보러가기 ↓</div>
+    </div>
+
+    <div class="detail-section" id="detail-section" style="display: none;">
+        <h2>문제 해결 방법</h2>
+        <div class="reason-box">
+            <h3>발생 이유</h3>
+            <p id="reason-desc">상세 원인</p>
+            <h3>해결법</h3>
+            <p id="solution-desc">해결 방법</p>
+        </div>
+    </div>
+
+    <script>
+        // 프론트엔드에서 넘어온 URL 파라미터를 읽습니다. (예: er.html?err=403)
+        const params = new URLSearchParams(window.location.search);
+        const errType = params.get('err') || 'default';
+
+        // 오류 종류별 데이터 매핑
+        const errorData = {
+            '403': {
+                title: '현재 접속자가 많습니다',
+                desc: '서버 트래픽이 집중되어 일시적으로 접속이 지연되고 있습니다.<br>잠시 후 다시 시도해 주세요.',
+                action: '<a href="jb.html" class="btn">다시 시도하기</a>',
+                hasDetail: false // 403은 스크롤(해결법)을 띄우지 않음
+            },
+            'null': {
+                title: '데이터베이스 연결 오류',
+                desc: '설정 오류로 인해 스프레드시트를 찾지 못하고 있습니다.',
+                action: '<a href="jb.html" class="btn">메인으로 가기</a>',
+                hasDetail: true,
+                reason: 'GAS 스크립트가 스프레드시트를 참조할 수 없는 권한 상태입니다.',
+                solution: 'GAS [새 배포] 설정에서 "실행하는 사용자"를 <strong>나(Me)</strong>로 변경하여 다시 배포하세요.'
+            },
+            'cors': {
+                title: '네트워크 통신 차단',
+                desc: '서버와의 통신이 보안 정책에 의해 차단되었습니다.',
+                action: '<a href="jb.html" class="btn">메인으로 가기</a>',
+                hasDetail: true,
+                reason: '외부 도메인에서의 접속이 허용되지 않았습니다.',
+                solution: 'GAS [새 배포] 설정에서 "액세스하는 사용자"를 <strong>모든 사용자</strong>로 변경하세요.'
+            },
+            'default': {
+                title: '알 수 없는 오류',
+                desc: '페이지 로딩 중 예기치 못한 문제가 발생했습니다.',
+                action: '<a href="jb.html" class="btn">처음으로 돌아가기</a>',
+                hasDetail: false
+            }
+        };
+
+        const data = errorData[errType] || errorData['default'];
+
+        // 화면 렌더링
+        document.getElementById('error-title').innerHTML = data.title;
+        document.getElementById('error-desc').innerHTML = data.desc;
+        document.getElementById('action-area').innerHTML = data.action;
+
+        // 상세 해결법이 있는 에러(null, cors 등)만 스크롤 영역 표시
+        if (data.hasDetail) {
+            document.getElementById('scroll-hint').style.display = 'block';
+            document.getElementById('detail-section').style.display = 'flex';
+            document.getElementById('reason-desc').innerHTML = data.reason;
+            document.getElementById('solution-desc').innerHTML = data.solution;
+
+            // 스크롤 시 부드럽게 페이드인 되는 Intersection Observer API 적용
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.2 });
+            observer.observe(document.getElementById('detail-section'));
+        }
+    </script>
+</body>
+</html>

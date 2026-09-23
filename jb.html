@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설문지 배정_분배기</title>
+    <style>
+        /* 이 폰트가 가장 예쁨 ㅇㅇ */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background-color: #ffffff; 
+            color: #111111;
+            text-align: center;
+        }
+        .wrapper {
+            padding: 0 24px;
+            max-width: 500px;
+            word-break: keep-all;
+        }
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        p {
+            font-size: 1.125rem;
+            color: #666666;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 16px 40px; 
+            background-color: #111111; 
+            color: #ffffff; 
+            text-decoration: none; 
+            border-radius: 999px; /* 알약버튼이 최고임 ㅇㅇ */
+            font-size: 1.125rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:hover { background-color: #333333; }
+        .btn:active { transform: scale(0.98); }
+        
+        /* 로딩 스피너 */
+        .spinner {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #111111;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper" id="app">
+        <div class="spinner"></div>
+        <h2>설문지 데이터를 확인중입니다.</h2>
+        <p>가장 적절한 설문지로 배정 중입니다. 잠시만 기다려주세요.</p>
+    </div>
+
+    <script>
+   
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQmc7mVUGfVH4mBPDfI-36eGpPmxzW8s6D1F_JYbRnhUWLgs7m9ZERrOgmEt5_qbUD/exec';
+        const SURVEY_URLS = {
+            'A': 'https://docs.google.com/forms/d/e/1FAIpQLSdqmJtBaZt6Jo5Aql4d28qVs3W4gSDfaG4m6YyBEzzeGzObqA/viewform?usp=publish-editor',
+            'B': 'https://docs.google.com/forms/d/e/1FAIpQLSeC3_M1BRjv4UUjlFcBjQ6N7sQCd7sF21Q8Z6_XWKjAO36KBw/viewform?usp=publish-editor'
+        };
+
+        async function assignSurvey() {
+            const appDiv = document.getElementById('app');
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(GAS_WEB_APP_URL, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error('HTTP_ERROR');
+
+                const data = await response.json();
+
+                if (data.status === 'busy') {
+                    window.location.href = 'E403.html';
+                    return;
+                }
+
+                if (data.status === 'success') {
+                    appDiv.innerHTML = `
+                        <h2 style="margin-bottom: 8px;">배정 완료</h2>
+                        <p style="color: #111; font-weight: 500;">귀하는 <strong>${data.assigned}형 설문지</strong>에 배정되었습니다.</p>
+                        <a href="${SURVEY_URLS[data.assigned]}" class="btn">설문 시작하기</a>
+                    `;
+                } else {
+                    appDiv.innerHTML = `<h2 style="color: #ff3333;">오류 발생</h2><p>${data.message}</p>`;
+                }
+            } catch (error) {
+                window.location.href = 'E403.html';
+            }
+        }
+
+        window.onload = assignSurvey;
+    </script>
+</body>
+</html>
