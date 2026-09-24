@@ -14,15 +14,19 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            min-height: 100vh;
+            box-sizing: border-box;
             background-color: #ffffff; 
             color: #111111;
             text-align: center;
+            /* 상단 로고와 콘텐츠 겹침 방지를 위해 padding-top을 120px로 설정 */
+            padding: 120px 24px 24px 24px; 
         }
         .wrapper {
-            padding: 0 24px;
             max-width: 500px;
             word-break: keep-all;
+            box-sizing: border-box;
+            width: 100%;
         }
         h2 {
             font-size: 2rem;
@@ -64,9 +68,24 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* 좌측 상단 로고 스타일 */
+        .top-left-logo {
+            position: fixed;
+            top: max(16px, 2vh);
+            left: max(16px, 2vw);
+            width: clamp(70px, 18vw, 140px); /* 로고 크기를 이전보다 더 키움 */
+            height: auto;
+            z-index: 9999;
+            pointer-events: none; /* 로고가 클릭이나 터치를 방해하지 않도록 설정 */
+        }
     </style>
 </head>
 <body>
+    
+    <!-- 좌측 상단 로고 이미지 -->
+    <img src="wony_logo.png" alt="Wony Logo" class="top-left-logo">
+
     <div class="wrapper" id="app">
         <div class="spinner"></div>
         <h2>설문지 데이터를 확인중입니다.</h2>
@@ -76,8 +95,8 @@
     <script>
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQmc7mVUGfVH4mBPDfI-36eGpPmxzW8s6D1F_JYbRnhUWLgs7m9ZERrOgmEt5_qbUD/exec';
         const SURVEY_URLS = {
-            'A': 'https://docs.google.com/forms/d/e/1FAIpQLSdqmJtBaZt6Jo5Aql4d28qVs3W4gSDfaG4m6YyBEzzeGzObqA/viewform?usp=publish-editor',
-            'B': 'https://docs.google.com/forms/d/e/1FAIpQLSeC3_M1BRjv4UUjlFcBjQ6N7sQCd7sF21Q8Z6_XWKjAO36KBw/viewform?usp=publish-editor'
+            'A': 'https://docs.google.com/forms/d/e/1FAIpQLSdqmJtBaZt6Jo5Aql4d28qVs3W4gSDfaG4m6YyBEzzeGzObqA/viewform?usp=headers',
+            'B': 'https://docs.google.com/forms/d/e/1FAIpQLSeC3_M1BRjv4UUjlFcBjQ6N7sQCd7sF21Q8Z6_XWKjAO36KBw/viewform?usp=headers'
         };
 
         async function assignSurvey() {
