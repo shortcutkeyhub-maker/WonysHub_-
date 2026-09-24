@@ -45,13 +45,10 @@
             border-radius: 999px; /* 알약버튼이 최고임 ㅇㅇ */
             font-size: 1.125rem;
             font-weight: 600;
-            border: none;
-            cursor: pointer;
             transition: background-color 0.2s, transform 0.1s;
         }
         .btn:hover { background-color: #333333; }
         .btn:active { transform: scale(0.98); }
-        .btn:disabled { background-color: #cccccc; cursor: not-allowed; transform: none; }
         
         /* 로딩 스피너 */
         .spinner {
@@ -86,7 +83,7 @@
         async function assignSurvey() {
             const appDiv = document.getElementById('app');
 
-            // 1. IP를 제외하고 오직 로컬 스토리지만을 활용한 재참여 확인
+            // 1. 브라우저 로컬 저장소 확인 (재참여 여부 확인)
             const hasParticipated = localStorage.getItem('hasParticipated');
             if (hasParticipated === 'true') {
                 const wantToRetry = confirm("이미 설문에 참여하신 기록이 있습니다. 다시 참여하시겠습니까?");
@@ -95,60 +92,69 @@
                         <h2 style="margin-bottom: 8px;">참여가 취소되었습니다</h2>
                         <p>관심 가져주셔서 감사합니다.</p>
                     `;
-                    return; // 스크립트 실행 중단
+                    return; // 취소 시 즉시 중단 (서버 통신 차단)
                 }
-                // 확인을 눌렀다면 그대로 아래의 배정 로직 진행
             }
-
-            try {
-                // 2. action=check 파라미터로 DB 락(Lock) 없이 배정 결과만 호출
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=check`);
-                if (!response.ok) throw new Error('HTTP_ERROR');
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    appDiv.innerHTML = `
-                        <h2 style="margin-bottom: 8px;">배정 완료</h2>
-                        <p style="color: #111; font-weight: 500;">귀하는 <strong>${data.assigned}형 설문지</strong>에 배정되었습니다.</p>
-                        <button onclick="confirmAndStart('${data.assigned}')" class="btn" id="start-btn">설문 시작하기</button>
-                    `;
-                } else {
-                    window.location.href = 'er.html?err=null';
-                }
-            } catch (error) {
-                window.location.href = 'er.html?err=cors';
-            }
-        }
-
-        // 3. 설문 시작 클릭 시 DB 카운트 증가 반영 및 로컬 스토리지에 참여 기록
-        async function confirmAndStart(assignedType) {
-            const btn = document.getElementById('start-btn');
-            btn.innerText = "이동 중...";
-            btn.disabled = true; // 중복 클릭 방지
 
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
-                
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=confirm&type=${assignedType}`, { signal: controller.signal });
+
+                const response = await fetch(GAS_WEB_APP_URL, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
-                if (!response.ok) throw new Error('HTTP_ERROR');
-                const data = await response.json();
-
-                if (data.status === 'busy') {
-                    window.location.href = 'er.html?err=403';
-                    return;
+                // 2. HTTP 상태 코드에 따른 세분화 에러 분기
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = 'er.html?err=403';
+                        return;
+                    } else if (response.status === 404 || response.status === 500) {
+                        window.location.href = 'er.html?err=null';
+                        return;
+                    } else {
+                        window.location.href = 'er.html?err=default';
+                        return;
+                    }
                 }
 
-                // 이동이 확정되면 로컬 스토리지에 참여 완료 마킹
-                localStorage.setItem('hasParticipated', 'true');
-                
-                window.location.href = SURVEY_URLS[assignedType];
+                const data = await response.json();
+
+                // 3. GAS 반환 JSON status값에 따른 er.html 매핑 확장
+                if (data.status === 'success') {
+                    if (!data.assigned || !SURVEY_URLS[data.assigned]) {
+                        // 정상 배정값이 없거나 매핑 실패 시
+                        window.location.href = 'er.html?err=null';
+                        return;
+                    }
+
+                    appDiv.innerHTML = `
+                        <h2 style="margin-bottom: 8px;">배정 완료</h2>
+                        <p style="color: #111; font-weight: 500;">귀하는 <strong>${data.assigned}형 설문지</strong>에 배정되었습니다.</p>
+                        <a href="${SURVEY_URLS[data.assigned]}" class="btn" onclick="markParticipated()">설문 시작하기</a>
+                    `;
+                } else if (data.status === 'busy' || data.status === '403') {
+                    window.location.href = 'er.html?err=403';
+                } else if (data.status === 'null' || data.status === 'error' || data.status === 'db_error') {
+                    window.location.href = 'er.html?err=null';
+                } else if (data.status === 'cors') {
+                    window.location.href = 'er.html?err=cors';
+                } else {
+                    window.location.href = 'er.html?err=default';
+                }
+
             } catch (error) {
-                window.location.href = 'er.html?err=403';
+                // 4. 통신 장애, CORS 차단, 타임아웃 예외 처리
+                if (error.name === 'AbortError' || error instanceof TypeError) {
+                    window.location.href = 'er.html?err=cors';
+                } else {
+                    window.location.href = 'er.html?err=default';
+                }
             }
+        }
+
+        // 클릭 시 로컬 스토리지에 참여 완료 기록
+        function markParticipated() {
+            localStorage.setItem('hasParticipated', 'true');
         }
 
         window.onload = assignSurvey;
