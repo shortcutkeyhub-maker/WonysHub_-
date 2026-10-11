@@ -2,13 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#E3350D">
 <title>0.1원 포켓마켓</title>
 <script>
 /* ===== 설정 부분 (여기만 바꾸면 됨) ===== */
 const CONFIG = {
-  GAS_URL:   'https://script.google.com/macros/s/AKfycbxh8DDh8wIKjxzOAqNo8oEbv5J6ijQNXWjwMwwV8dMcaeZRg7IkncmzB0N_oW5fvaTv/exec',   // GAS 웹앱 URL
+  GAS_URL:   'https://script.google.com/macros/s/여기에_배포_ID/exec',   // GAS 웹앱 URL
   TCG_LOGO:  'tcg_logo.png',    // 서비스 텍스트 로고 (투명 배경)
   WONY_LOGO: 'wony_logo.png',   // 구석 띠 로고 (흰 배경)
   PAGE_SIZE: 48                 // 한 번에 그리는 카드 수
@@ -517,7 +518,7 @@ img{display:block;max-width:100%}
   <div class="wrap">
     <img id="footLogo" alt="0.1원 포켓마켓">
     <p>모든 카드 한 장에 0.1원 · 거래 장소 <span id="footPlace">점심시간 3층 홈베</span></p>
-    <p class="fine">카드 정보 및 이미지 제공 TCGdex · Pokémon 및 관련 상표의 권리는 각 권리자에게 있어요</p>
+    <p class="fine">카드 정보 및 이미지 출처 포켓몬코리아 · TCGdex · Pokémon 및 관련 상표의 권리는 각 권리자에게 있어요</p>
   </div>
 </footer>
 
@@ -618,7 +619,9 @@ function dateLabel(d, long) {
 }
 function img(url, q) {
   if (!url) return '';
-  return url.includes('assets.tcgdex.net') ? url.replace(/\/(high|low)\.(webp|png|jpg)$/i, '') + `/${q}.webp` : url;
+  if (url.includes('assets.tcgdex.net')) return url.replace(/\/(high|low)\.(webp|png|jpg)$/i, '') + `/${q}.webp`;
+  if (url.includes('pokemonkorea.co.kr')) return url.split('?')[0] + (q === 'low' ? '?w=400' : '');
+  return url;
 }
 function loadJSON(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } }
 function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
