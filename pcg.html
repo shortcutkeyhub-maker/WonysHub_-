@@ -5,7 +5,8 @@
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#E3350D">
-<title>0.1원 포켓마켓</title>
+<meta name="description" content="웹 개발 학습용 예제 사이트입니다. 실제 판매 사이트가 아닙니다.">
+<title>0.1원 포켓마켓 · 학습용 예제</title>
 <script>
 /* ===== 설정 부분 (여기만 바꾸면 됨) ===== */
 const CONFIG = {
@@ -31,7 +32,7 @@ const CONFIG = {
   --sh1:0 1px 2px rgba(29,31,44,.05),0 4px 12px rgba(29,31,44,.06);
   --sh2:0 12px 32px rgba(29,31,44,.14);
   --sh3:0 30px 80px rgba(29,31,44,.30);
-  --head:68px;
+  --head:88px;
   --ease:cubic-bezier(.2,.8,.2,1);
   --font:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --disp:'Black Han Sans','Pretendard Variable',sans-serif;
@@ -53,12 +54,22 @@ img{display:block;max-width:100%}
 .ms{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:22px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;user-select:none;flex-shrink:0}
 .ms.fill{font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24}
 
+/* ===== 학습용 안내 부분 ===== */
+.notice{background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding-top:env(safe-area-inset-top)}
+.notice .wrap{display:flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding-top:6px;padding-bottom:6px;text-align:center}
+.notice .ms{font-size:18px;color:var(--yel)}
+.notice b{color:var(--yel);font-weight:800}
+.edu{display:inline-flex;align-items:center;gap:6px;margin:6px 0 4px;padding:8px 14px;border-radius:999px;background:var(--ink);color:#fff!important;font-size:13px;font-weight:700}
+.edu .ms{font-size:18px;color:var(--yel)}
+.ck-edu{display:flex;align-items:center;gap:6px;margin:-8px 0 16px;font-size:13px;font-weight:600;color:var(--ink2)}
+.ck-edu .ms{font-size:18px;color:var(--ink3)}
+
 /* ===== 헤더 부분 ===== */
 .header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(180%) blur(16px);backdrop-filter:saturate(180%) blur(16px);padding-top:env(safe-area-inset-top)}
 .header-in{height:var(--head);display:flex;align-items:center;gap:8px}
 .stripe{display:flex;height:5px}.stripe i{flex:7;background:var(--red)}.stripe i+i{flex:3;background:var(--yel)}
 .brand{display:flex;align-items:center;height:100%;margin-right:auto}
-.brand img{height:54px;width:auto;transition:transform .25s var(--ease)}
+.brand img{height:76px;width:auto;transition:transform .25s var(--ease)}
 .brand:hover img{transform:scale(1.04) rotate(-1.5deg)}
 .brand-text{display:none;font-family:var(--disp);font-size:24px;color:var(--red)}
 .brand.fallback img{display:none}.brand.fallback .brand-text{display:block}
@@ -373,11 +384,11 @@ img{display:block;max-width:100%}
 /* ===== 푸터 / 구석 로고 / 하단바 / 토스트 부분 ===== */
 .footer{background:var(--soft);border-top:1px solid var(--line);padding:36px 0 110px;margin-top:10px}
 .footer .wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
-.footer img{height:58px;width:auto;margin-bottom:6px}
+.footer img{height:110px;width:auto;margin-bottom:4px}
 .footer p{font-size:13px;color:var(--ink2)}
 .footer .fine{font-size:12px;color:var(--ink3)}
-.wony{position:fixed;left:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:55;display:block;background:#fff;padding:8px 12px;border-radius:14px;box-shadow:var(--sh2);transition:transform .2s,bottom .3s var(--ease)}
-.wony img{height:30px;width:auto}
+.wony{position:fixed;left:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:55;display:block;background:#fff;padding:10px 14px;border-radius:16px;box-shadow:var(--sh2);transition:transform .2s,bottom .3s var(--ease)}
+.wony img{height:46px;width:auto}
 .wony:hover{transform:translateY(-2px)}
 .cartbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:56;height:62px;border-radius:18px;background:var(--red);color:#fff;display:none;align-items:center;justify-content:space-between;padding:0 12px 0 16px;box-shadow:0 12px 30px rgba(227,53,13,.4);font-weight:700;animation:rise .35s var(--ease)}
 .cb-l{display:flex;align-items:center;gap:10px;font-size:15px}
@@ -406,13 +417,14 @@ img{display:block;max-width:100%}
   .d-art{padding:34px 70px}
   .d-info{padding:24px 22px 24px}
   body.has-cart .cartbar{display:flex}
-  body.has-cart .wony{bottom:calc(86px + env(safe-area-inset-bottom))}
+  body.has-cart .wony{bottom:calc(84px + env(safe-area-inset-bottom))}
   body.has-cart .toasts{bottom:calc(90px + env(safe-area-inset-bottom))}
 }
 @media (max-width:640px){
-  :root{--head:60px}
+  :root{--head:70px}
   .wrap{padding:0 16px}
-  .brand img{height:44px}
+  .brand img{height:60px}
+  .notice{font-size:12px}
   .hbtn .lbl{display:none}
   .hbtn{padding:0 12px}
   .hero-ball{width:340px;height:340px;right:-140px}
@@ -434,13 +446,16 @@ img{display:block;max-width:100%}
   .d-name{font-size:24px}
   .ck,.lk{padding:26px 18px 22px}
   .done{padding:34px 18px 22px}
-  .wony{left:12px;padding:6px 9px}
-  .wony img{height:24px}
+  .wony{left:12px;padding:7px 10px;border-radius:13px}
+  .wony img{height:34px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+
+<!-- 학습용 안내 부분 -->
+<div class="notice" role="note"><div class="wrap"><span class="ms fill">school</span><span>이 사이트는 <b>웹 개발 학습용 예제</b>예요. 실제로 카드를 판매하거나 주문을 받지 않아요.</span></div></div>
 
 <!-- 헤더 부분 -->
 <header class="header">
@@ -458,7 +473,7 @@ img{display:block;max-width:100%}
   <div class="hero-dots"></div>
   <div class="wrap hero-in">
     <div>
-      <span class="eyebrow"><span class="ms fill">bolt</span>친구들끼리 나누는 카드 마켓</span>
+      <span class="eyebrow"><span class="ms fill">school</span>학습용 예제 사이트 · 실제 판매 아님</span>
       <h1>모든 카드<br>한 장에 <em>0.1원</em></h1>
       <p class="hero-sub">필요한 카드만 골라 담고, 정한 날 점심시간에 받아가세요</p>
       <label class="search" id="search">
@@ -517,6 +532,7 @@ img{display:block;max-width:100%}
 <footer class="footer">
   <div class="wrap">
     <img id="footLogo" alt="0.1원 포켓마켓">
+    <p class="edu"><span class="ms fill">school</span>웹 개발 학습용 예제 사이트예요. 실제 판매나 거래는 이루어지지 않아요.</p>
     <p>모든 카드 한 장에 0.1원 · 거래 장소 <span id="footPlace">점심시간 3층 홈베</span></p>
     <p class="fine">카드 정보 및 이미지 출처 포켓몬코리아 · TCGdex · Pokémon 및 관련 상표의 권리는 각 권리자에게 있어요</p>
   </div>
@@ -1049,6 +1065,7 @@ async function openCheckout() {
     <div class="ck">
       <div class="mh"><div class="hi"><span class="ms fill">event_available</span></div><div><h3>거래 날짜 선택</h3><p>주문일로부터 ${S.maxOffset}일 이내 평일 · 하루에 한 명만 거래해요</p></div></div>
       <div class="place"><span class="ms fill">location_on</span><div><small>거래 장소</small><b>${esc(S.place)}</b></div></div>
+      <p class="ck-edu"><span class="ms">school</span>학습용 예제라 실제 거래는 이루어지지 않아요</p>
       <div class="dates" id="dates">${'<div class="date sk"></div>'.repeat(7)}</div>
       <div class="pick-msg" id="pickMsg"><span class="ms">touch_app</span>거래할 날짜를 골라주세요</div>
       <div class="ck-foot">
