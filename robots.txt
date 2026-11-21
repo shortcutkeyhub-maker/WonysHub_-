@@ -1,0 +1,18 @@
+# 모든 일반 크롤러 및 AI 에이전트 허용
+User-agent: *
+Allow: /
+
+# 민감/관리자/시스템 경로 접근 차단
+Disallow: /admin/
+Disallow: /api/private/
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /cgi-bin/
+
+# 알려진 악성 스크래퍼·취약점 스캐너 봇 차단 (필요에 따라 추가)
+User-agent: MJ12bot
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: DotBot
+User-agent: PetalBot
+Disallow: /
